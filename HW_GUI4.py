@@ -20,9 +20,12 @@ menuBar.add_cascade(label='File',menu=fileMenu)
 fileMenu.add_command(label='Import CSV')
 fileMenu.add_command(label='Exit',command=root.quit)
 
+def usage():
+	messagebox.showinfo('Usage','There are 2 tabs in this program')
+
 helpMenu=Menu(menuBar,tearoff=False)
 menuBar.add_cascade(label='Help',menu=helpMenu)
-helpMenu.add_command(label='Usage')
+helpMenu.add_command(label='Usage',command=usage)
 
 
 def credit():
