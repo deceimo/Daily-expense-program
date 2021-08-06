@@ -7,7 +7,7 @@ from tkinter.font import Font
 
 root=Tk()
 root.title('Daily expense by Deceimo_ V.0.1')
-root.geometry('760x550+500+100')
+root.geometry('780x550+550+100')
 root.iconbitmap('main.ico')
 
 #Build menu
@@ -40,7 +40,7 @@ creditMenu.add_command(label='About editor',command=credit)
 
 
 #Define variable
-font1=('times new roman',20)
+font1=(None,20)
 v_menu=StringVar()
 v_cost=StringVar()
 v_amount=StringVar()
@@ -114,7 +114,7 @@ def save(event=None):
 			f.close()
 
 			#Update data in tree view
-			add()
+			update_table()
 
 			E1.focus()
 			v_locate.set(0)
@@ -124,9 +124,6 @@ def save(event=None):
 			v_result.set('Please insert correct/all data')
 			print('Please insert correct/all data')
 			messagebox.showwarning('ERROR','Please insert correct/all data')
-			v_menu.set('')
-			v_cost.set('')
-			v_amount.set('')
 			E1.focus()
 
 
@@ -215,16 +212,16 @@ root.bind('<Return>',save)
 root.bind('<Up>',up)
 root.bind('<Down>',down)
 
-#############################################################
+########################################################################
 
 
 
 #Tab2
 #Making tree view
 header = ['Transaction ID','Date','Menu','Cost','Amount','Total']
-width = [140,210,150,90,70,90]
+width = [140,210,150,90,80,90]
 tree = ttk.Treeview(T2,columns=header,show='headings',height=15)
-tree.pack()
+tree.pack(pady=10)
 
 style = ttk.Style()
 style.configure("Treeview.Heading", font=(None,15))
@@ -235,8 +232,11 @@ for h,w in zip(header,width):
 for i in header:
 	tree.heading(i,text=i)
 
+
+#Deleting item in treeview
 def delete(event=None):
 	try:
+		dummy = tree.selection()[0]
 		check = messagebox.askyesno('Confirm','Do you want to delete data?')
 		if(check==True):
 			#Get ID of that one
@@ -267,7 +267,7 @@ def delete(event=None):
 				writer.writerow(read)
 			f.close()
 	except:
-		print('There is no any data')
+		print('You must select item')
 
 
 tree.bind('<BackSpace>',delete)
@@ -275,12 +275,12 @@ tree.bind('<BackSpace>',delete)
 
 
 B2 = ttk.Button(T2,text='Delete',command=delete)
-B2.pack(ipadx=1,ipady=10,pady=20)
+B2.pack(ipadx=1,ipady=5,pady=15)
 
 
 
 #Showing the old menu in the csv file
-def add():
+def update_table():
 	try:
 		data=tree.get_children()
 		for d in data:
@@ -294,6 +294,142 @@ def add():
 	except:
 		print('There is no any data')
 
-add()
+update_table()
+
+
+v_menu_popup=StringVar()
+v_cost_popup=StringVar()
+v_amount_popup=StringVar()
+
+def save_edit(event=None):
+	#Get data
+	menu=v_menu_popup.get()
+	cost=v_cost_popup.get()
+	amount=v_amount_popup.get()
+
+	if(len(menu) == 0):
+		E1_popup.focus()
+		print('Please insert correct/all data')
+		messagebox.showwarning('ERROR','Please insert correct/all data')
+	else:
+		try:
+			cost=float(cost)
+			amount=int(amount)
+			total=cost*amount
+			cost=f'{cost:,.2f}'
+			amount=f'{amount:,}'
+			total=f'{total:,.2f}'
+
+			select = tree.selection()[0]
+			data = tree.item(select)
+			data=data['values']
+			data=data[0]
+			ID=str(data)
+
+			#Read all item in csv for modifying
+			f=open('expense.csv','r',encoding='utf-8',newline='')
+			reader=csv.reader(f)
+			reader=list(reader)
+
+			#Find the list that will be modified, and modify it
+			for read in reader:
+				if (ID in read[0]):
+					read[2]=menu
+					read[3]=cost
+					read[4]=amount
+					read[5]=total
+					break
+			f.close()
+
+			#Update in csv
+			f=open('expense.csv','w',encoding='utf-8',newline='')
+			writer=csv.writer(f)
+			for read in reader:
+				writer.writerow(read)
+			f.close()
+
+			#Update in treeview
+			update_table()
+
+			#Close pop up
+			popup.destroy()
+		except:
+			print('Please insert correct/all data')
+			messagebox.showwarning('ERROR','Please insert correct/all data')
+			E1_popup.focus()
+
+
+
+#Editing item in treeview
+def edit(event=None):
+	try:
+		dummy = tree.selection()[0]
+		global popup
+		popup = Toplevel()
+		popup.geometry('350x350+200+200')
+		popup.title('Edit record')
+
+		L1_popup=ttk.Label(popup,text='Menu',font=font1)
+		L1_popup.pack()
+		global E1_popup
+		E1_popup=ttk.Entry(popup,textvariable=v_menu_popup,font=font1)
+		E1_popup.pack()
+
+		L2_popup=ttk.Label(popup,text='Cost(Baht)',font=font1)
+		L2_popup.pack()
+		global E2_popup
+		E2_popup=ttk.Entry(popup,textvariable=v_cost_popup,font=font1)
+		E2_popup.pack()
+
+		L3_popup=ttk.Label(popup,text='Amount',font=font1)
+		L3_popup.pack()
+		global E3_popup
+		E3_popup=ttk.Entry(popup,textvariable=v_amount_popup,font=font1)
+		E3_popup.pack()
+
+		B1_popup=ttk.Button(popup,text='Save',command=save_edit)
+		B1_popup.pack(ipadx=10,ipady=5,padx=10,pady=12)
+
+		select = tree.selection()[0]
+		data = tree.item(select)
+		data=data['values']
+
+		v_menu_popup.set(data[2])
+		v_cost_popup.set(data[3])
+		v_amount_popup.set(data[4])
+
+		popup.bind('<Return>',save_edit)
+		E1_popup.focus()
+
+		popup.mainloop()
+	except:
+		print('You must select item')
+
+
+B3 = ttk.Button(T2,text='Edit',command=edit)
+B3.pack(ipadx=1,ipady=5,pady=10)
+
+############################################################
+#Right click menu in treeview
+right_click = Menu(root,tearoff=False)
+right_click.add_command(label='Delete',command=delete)
+right_click.add_command(label='Edit',command=edit)
+
+
+def menu_popup(event):
+	try:
+		dummy = tree.selection()[0]
+		right_click.post(event.x_root,event.y_root)
+	except:
+		print('You must select item')
+
+def detach(event=None):
+	print('left click')
+	tree.selection_remove(tree.focus())
+
+tree.bind('<Button-3>',menu_popup)
+T2.bind('<Button-1>',detach)
+
+
 
 root.mainloop()
