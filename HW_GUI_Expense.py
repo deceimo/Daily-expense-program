@@ -4,10 +4,18 @@ from datetime import datetime
 import csv
 from tkinter.font import Font
 
-
 root=Tk()
 root.title('Daily expense by Deceimo_ V.0.1')
-root.geometry('780x550+550+100')
+
+w = 780
+h = 550
+
+ws = root.winfo_screenwidth()
+hs = root.winfo_screenheight()
+
+x = (ws/2) - (w/2)
+y = (hs/2) - (h/2)
+root.geometry(f'{w}x{h}+{x:.0f}+{y:.0f}')
 root.iconbitmap('main.ico')
 
 #Build menu
@@ -363,10 +371,14 @@ def save_edit(event=None):
 #Editing item in treeview
 def edit(event=None):
 	try:
+		a=350
+		b=300
+		da = x-(a/2)
+		db = y
 		dummy = tree.selection()[0]
 		global popup
 		popup = Toplevel()
-		popup.geometry('350x350+200+200')
+		popup.geometry(f'{a}x{b}+{da:.0f}+{db:.0f}')
 		popup.title('Edit record')
 
 		L1_popup=ttk.Label(popup,text='Menu',font=font1)
